@@ -1,34 +1,31 @@
 const express = require("express");
-const productController = require("./../controllers/productController");
+const brandController = require("./../controllers/brandController");
 const authController = require("../controllers/authController");
 
 const router = express.Router();
 
 router
   .route("/")
-  .get(productController.getAllProducts)
+  .get(brandController.getAllBrands)
+
   .post(
     authController.protect,
     authController.restrictTo("admin"),
-    productController.uploadProductPhoto,
-    productController.resizeProductPhoto,
-    productController.createProduct
+    brandController.createBrand
   );
 
 router
   .route("/:id")
-  .get(productController.getProduct)
+  .get(brandController.getBrand)
   .patch(
     authController.protect,
     authController.restrictTo("admin"),
-    productController.uploadProductPhoto,
-    productController.resizeProductPhoto,
-    productController.updateProduct
+    brandController.updateBrand
   )
   .delete(
     authController.protect,
     authController.restrictTo("admin"),
-    productController.deleteProduct
+    brandController.deleteBrand
   );
 
 module.exports = router;
