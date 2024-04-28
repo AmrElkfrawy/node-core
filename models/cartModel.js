@@ -2,29 +2,44 @@ const mongoose = require("mongoose");
 
 const cartSchema = new mongoose.Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     cartItems: [
       {
         product: {
-          type: mongoose.Schema.Types.ObjectId,
+          type: mongoose.Schema.ObjectId,
           ref: "Product",
-          required: true,
         },
         quantity: {
           type: Number,
-          required: true,
           default: 1,
+          min: [0, "Quantity can not be negative"],
         },
+        color: String,
         price: Number,
-        image: String,
       },
     ],
-    totalPrice: Number,
+    totalCartPrice: Number,
     totalPriceAfterDiscount: Number,
+    user: {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+    },
   },
   { timestamps: true }
 );
 
-const Cart = mongoose.model("Cart", cartSchema);
+cartSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: "cartItems.product",
+    select: "name price image",
+  });
+  next();
+});
+cartSchema.pre("save", function (next) {
+  this.populate({
+    path: "cartItems.product",
+    select: "name price image",
+  });
+  next();
+});
 
-module.exports = Cart;
+module.exports = mongoose.model("Cart", cartSchema);

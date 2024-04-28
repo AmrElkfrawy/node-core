@@ -4,7 +4,7 @@ const productSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
+      required: [true, "Product name is required"],
     },
     slug: {
       type: String,
@@ -14,7 +14,7 @@ const productSchema = new mongoose.Schema(
     description: String,
     price: {
       type: Number,
-      required: true,
+      required: [true, "Product price is required"],
     },
     discount: {
       type: Number,
@@ -26,6 +26,7 @@ const productSchema = new mongoose.Schema(
     quantity: {
       type: Number,
       required: true,
+      min: [0, "Quantity can not be negative"],
     },
     category: {
       type: mongoose.Schema.ObjectId,
@@ -41,6 +42,11 @@ const productSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+productSchema.pre("save", function (next) {
+  this.priceAfterDiscount = this.price - (this.price * this.discount) / 100;
+  next();
+});
 
 const Product = mongoose.model("Product", productSchema);
 
