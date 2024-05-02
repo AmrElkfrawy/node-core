@@ -1,7 +1,7 @@
 const Product = require("./../models/productModel");
-const APIFeatures = require("./../utils/apiFeatures");
 const catchAsync = require("./../utils/catchAsync");
 const AppError = require("./../utils/appError");
+const factory = require("./handlerFactory");
 
 const multer = require("multer");
 const sharp = require("sharp");
@@ -54,56 +54,16 @@ exports.resizeProductPhoto = catchAsync(async (req, res, next) => {
   next();
 });
 
-exports.getAllProducts = catchAsync(async (req, res, next) => {
-  // EXECUTE QUERY
-  if (!req.params && !req.params.categoryId)
-    req.params.query.categoryId = req.body.category;
-  let filter = {};
-  if (req.params.categoryId) filter = { category: req.params.categoryId };
-  const features = new APIFeatures(Product.find(filter), req.query)
-    .filter()
-    .sort()
-    .limitFields()
-    .paginate();
+exports.setCategoryIdToBody = (req, res, next) => {
+  // Nested route (Create)
+  if (!req.body.category) req.body.category = req.params.categoryID;
+  next();
+};
 
-  const products = await features.query;
-
-  // SEND RESPONSE
-  res.status(200).json({
-    status: "success",
-    requestedAt: req.requestTime,
-    results: products.length,
-    data: {
-      products,
-    },
-  });
-});
-
-exports.getProduct = catchAsync(async (req, res, next) => {
-  const product = await Product.findById(req.params.id);
-
-  if (!product) {
-    return next(new AppError("No product found with this ID", 404));
-  }
-
-  res.status(200).json({
-    status: "success",
-    data: {
-      product,
-    },
-  });
-});
-
-exports.createProduct = catchAsync(async (req, res, next) => {
-  if (!req.body.category) req.body.category = req.params.categoryId;
-  const newProduct = await Product.create(req.body);
-  res.status(201).json({
-    status: "success",
-    data: {
-      product: newProduct,
-    },
-  });
-});
+exports.getAllProducts = factory.getAll(Product);
+exports.getProduct = factory.getOne(Product);
+exports.createProduct = factory.createOne(Product);
+exports.deleteProduct = factory.deleteOne(Product);
 
 exports.updateProduct = catchAsync(async (req, res, next) => {
   if (req.body.editedImages) {
@@ -135,18 +95,5 @@ exports.updateProduct = catchAsync(async (req, res, next) => {
     data: {
       product,
     },
-  });
-});
-
-exports.deleteProduct = catchAsync(async (req, res, next) => {
-  const product = await Product.findByIdAndDelete(req.params.id);
-
-  if (!product) {
-    return next(new AppError("No product found with this ID", 404));
-  }
-
-  res.status(204).json({
-    status: "success",
-    data: null,
   });
 });

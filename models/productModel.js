@@ -43,6 +43,8 @@ const productSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+productSchema.index({ name: 1, category: 1, brand: 1 }, { unique: true });
+
 productSchema.pre("save", function (next) {
   this.priceAfterDiscount = this.price - (this.price * this.discount) / 100;
   next();

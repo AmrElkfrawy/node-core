@@ -1,10 +1,15 @@
 const express = require("express");
 const categoryController = require("./../controllers/categoryController");
 const authController = require("../controllers/authController");
+const subcategoryRouter = require("./subcategoryRoutes");
 
 const productRouter = require("./productRoutes");
 
 const router = express.Router();
+
+// Nested route
+router.use("/:categoryID/subcategory", subcategoryRouter);
+router.use("/:categoryID/products", productRouter);
 
 router
   .route("/")
