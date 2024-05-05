@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const slugify = require("slugify");
 
 const brandSchema = new mongoose.Schema(
   {
@@ -7,14 +8,16 @@ const brandSchema = new mongoose.Schema(
       required: [true, "Brand required"],
       unique: [true, "Brand must be unique"],
     },
-    slug: {
-      type: String,
-      lowercase: true,
-    },
+    slug: String,
     image: String,
   },
   { timestamps: true }
 );
+
+brandSchema.pre("save", function (next) {
+  this.slug = slugify(this.name, { lower: true });
+  next();
+});
 
 const Brand = mongoose.model("Brand", brandSchema);
 

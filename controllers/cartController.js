@@ -17,7 +17,6 @@ const calcTotalCartPrice = (cart) => {
 
 exports.addProductToCart = catchAsync(async (req, res, next) => {
   const quantity = req.body.quantity || 1;
-  const color = req.body.color || "any";
 
   // product
   const product = await Product.findById(req.body.productId);
@@ -37,7 +36,6 @@ exports.addProductToCart = catchAsync(async (req, res, next) => {
       cartItems: [
         {
           product: req.body.productId,
-          color: req.body.color,
           quantity,
           price: product.price * quantity,
         },
@@ -46,9 +44,7 @@ exports.addProductToCart = catchAsync(async (req, res, next) => {
   } else {
     // product exist in cart, update product quantity
     const productIndex = cart.cartItems.findIndex(
-      (item) =>
-        item.product._id.toString() === req.body.productId &&
-        item.color === color
+      (item) => item.product._id.toString() === req.body.productId
     );
 
     if (productIndex > -1) {
@@ -58,7 +54,6 @@ exports.addProductToCart = catchAsync(async (req, res, next) => {
       // product not exist in cart,  push product to cartItems array
       cart.cartItems.push({
         product: req.body.productId,
-        color,
         price: product.price * quantity,
       });
     }

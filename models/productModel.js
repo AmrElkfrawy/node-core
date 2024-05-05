@@ -6,11 +6,8 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: [true, "Product name is required"],
     },
-    slug: {
-      type: String,
-      required: true,
-      lowercase: true,
-    },
+    slug: String,
+
     description: String,
     price: {
       type: Number,
@@ -37,8 +34,11 @@ const productSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: "Brand",
     },
+    subCategory: {
+      type: mongoose.Schema.ObjectId,
+      ref: "SubCategory",
+    },
     images: [String],
-    colors: [String],
   },
   { timestamps: true }
 );
@@ -46,18 +46,35 @@ const productSchema = new mongoose.Schema(
 productSchema.index({ name: 1, category: 1, brand: 1 }, { unique: true });
 
 productSchema.pre("save", function (next) {
+  this.slug = slugify(this.name, { lower: true });
+  next();
+});
+
+productSchema.pre("save", function (next) {
+  this.priceAfterDiscount = this.price - (this.price * this.discount) / 100;
+  next();
+});
+productSchema.pre(/^find/, function (next) {
   this.priceAfterDiscount = this.price - (this.price * this.discount) / 100;
   next();
 });
 
 productSchema.pre(/^find/, function (next) {
-  this.populate({
-    path: "category",
-    select: "name -_id",
-  }).populate({
-    path: "brand",
-    select: "name -_id",
-  });
+  const excludeCategoryAndBrand = !this.getOptions().excludeCategoryAndBrand;
+  if (excludeCategoryAndBrand) {
+    this.populate({
+      path: "category",
+      select: "name -_id",
+    })
+      .populate({
+        path: "brand",
+        select: "name -_id",
+      })
+      .populate({
+        path: "subCategory",
+        select: "name -_id",
+      });
+  }
   next();
 });
 

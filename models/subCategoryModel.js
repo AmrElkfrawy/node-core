@@ -9,10 +9,8 @@ const subCategorySchema = new mongoose.Schema(
       minlength: [2, "To short SubCategory name"],
       maxlength: [32, "To long SubCategory name"],
     },
-    slug: {
-      type: String,
-      lowercase: true,
-    },
+    slug: String,
+
     category: {
       type: mongoose.Schema.ObjectId,
       ref: "Category",
@@ -21,6 +19,11 @@ const subCategorySchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+subCategorySchema.pre("save", function (next) {
+  this.slug = slugify(this.name, { lower: true });
+  next();
+});
 
 const SubCategory = mongoose.model("SubCategory", subCategorySchema);
 
