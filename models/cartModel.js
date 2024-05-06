@@ -13,7 +13,8 @@ const cartSchema = new mongoose.Schema(
           default: 1,
           min: [0, "Quantity can not be negative"],
         },
-        price: Number,
+        itemPrice: Number,
+        itemPriceAfterDiscount: Number,
       },
     ],
     totalCartPrice: Number,
@@ -29,15 +30,7 @@ const cartSchema = new mongoose.Schema(
 cartSchema.pre(/^find/, function (next) {
   this.populate({
     path: "cartItems.product",
-    select: "name price discount image",
-    options: { excludeCategoryAndBrand: true },
-  });
-  next();
-});
-cartSchema.pre("save", function (next) {
-  this.populate({
-    path: "cartItems.product",
-    select: "name price image",
+    select: "name price discount priceAfterDiscount images quantity",
     options: { excludeCategoryAndBrand: true },
   });
   next();

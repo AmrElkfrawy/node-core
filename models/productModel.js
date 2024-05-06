@@ -25,6 +25,10 @@ const productSchema = new mongoose.Schema(
       required: true,
       min: [0, "Quantity can not be negative"],
     },
+    sold: {
+      type: Number,
+      default: 0,
+    },
     category: {
       type: mongoose.Schema.ObjectId,
       ref: "Category",
@@ -47,14 +51,6 @@ productSchema.index({ name: 1, category: 1, brand: 1 }, { unique: true });
 
 productSchema.pre("save", function (next) {
   this.slug = slugify(this.name, { lower: true });
-  next();
-});
-
-productSchema.pre("save", function (next) {
-  this.priceAfterDiscount = this.price - (this.price * this.discount) / 100;
-  next();
-});
-productSchema.pre(/^find/, function (next) {
   this.priceAfterDiscount = this.price - (this.price * this.discount) / 100;
   next();
 });

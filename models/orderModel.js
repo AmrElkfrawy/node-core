@@ -5,17 +5,22 @@ const orderSchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: [true, "Order must be belong to user"],
     },
     products: [
       {
         product: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "Product",
-          required: true,
+          required: [true, "Product is required"],
         },
-        quantity: { type: Number, required: true },
-        price: Number,
+        quantity: {
+          type: Number,
+          required: true,
+          min: [0, "Quantity can not be negative"],
+        },
+        itemPrice: Number,
+        itemPriceAfterDiscount: Number,
       },
     ],
     totalPrice: {
@@ -24,15 +29,15 @@ const orderSchema = new mongoose.Schema(
     },
     status: {
       type: String,
+      enum: ["Pending", "Shipped", "Delivered", "Cancelled"],
       default: "Pending",
     },
     shippingAddress: {
       details: String,
-      phone: String,
       city: String,
       postalCode: String,
+      phone: String,
     },
-    deliveryDate: Date,
     shippingPrice: {
       type: Number,
       default: 0,
@@ -46,7 +51,6 @@ const orderSchema = new mongoose.Schema(
       type: String,
       default: "Unpaid",
     },
-    date: Date,
   },
   { timestamps: true }
 );

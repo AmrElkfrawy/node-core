@@ -7,11 +7,13 @@ const Cart = require("../models/cartModel");
 
 const calcTotalCartPrice = (cart) => {
   let totalPrice = 0;
+  let totalPriceAfterDiscount = 0;
   cart.cartItems.forEach((item) => {
-    totalPrice += item.price;
+    totalPrice += item.itemPrice;
+    totalPriceAfterDiscount += item.itemPriceAfterDiscount;
   });
   cart.totalCartPrice = totalPrice;
-  cart.totalPriceAfterDiscount = undefined;
+  cart.totalPriceAfterDiscount = totalPriceAfterDiscount;
   return totalPrice;
 };
 
@@ -37,7 +39,9 @@ exports.addProductToCart = catchAsync(async (req, res, next) => {
         {
           product: req.body.productId,
           quantity,
-          price: product.price * quantity,
+          itemPrice: product.price * quantity,
+          itemPriceAfterDiscount:
+            product.price * (1 - product.discount / 100) * quantity,
         },
       ],
     });
@@ -49,12 +53,17 @@ exports.addProductToCart = catchAsync(async (req, res, next) => {
 
     if (productIndex > -1) {
       cart.cartItems[productIndex].quantity += quantity;
-      cart.cartItems[productIndex].price += product.price * quantity;
+      cart.cartItems[productIndex].itemPrice += product.price * quantity;
+      cart.cartItems[productIndex].itemPriceAfterDiscount +=
+        product.price * (1 - product.discount / 100) * quantity;
     } else {
       // product not exist in cart,  push product to cartItems array
       cart.cartItems.push({
         product: req.body.productId,
-        price: product.price * quantity,
+        quantity,
+        itemPrice: product.price * quantity,
+        itemPriceAfterDiscount:
+          product.price * (1 - product.discount / 100) * quantity,
       });
     }
   }
@@ -92,6 +101,9 @@ exports.removeSpecificCartItem = catchAsync(async (req, res, next) => {
     },
     { new: true }
   );
+  if (!cart) {
+    return next(new AppError(`There is no cart for this user`, 404));
+  }
 
   calcTotalCartPrice(cart);
   cart.save();
@@ -116,7 +128,7 @@ exports.updateCartItemQuantity = catchAsync(async (req, res, next) => {
 
   const cart = await Cart.findOne({ user: req.user._id });
   if (!cart) {
-    return next(new AppError(`there is no cart for current user`, 404));
+    return next(new AppError(`There is no cart for current user`, 404));
   }
 
   const itemIndex = cart.cartItems.findIndex(
@@ -126,8 +138,12 @@ exports.updateCartItemQuantity = catchAsync(async (req, res, next) => {
     const cartItem = cart.cartItems[itemIndex];
     cartItem.quantity = quantity;
     cart.cartItems[itemIndex] = cartItem;
-    cart.cartItems[itemIndex].price =
+    cart.cartItems[itemIndex].itemPrice =
       cart.cartItems[itemIndex].product.price * quantity;
+    cart.cartItems[itemIndex].itemPriceAfterDiscount =
+      cart.cartItems[itemIndex].product.price *
+      (1 - cart.cartItems[itemIndex].product.discount / 100) *
+      quantity;
   } else {
     return next(new AppError(`There is no cart item with this id`, 404));
   }

@@ -44,16 +44,13 @@ const userSchema = new mongoose.Schema(
     addresses: [
       {
         id: { type: mongoose.Schema.Types.ObjectId },
-        alias: String,
-        details: String,
-        phone: String,
+        governorate: String,
         city: String,
+        details: String,
         postalCode: String,
       },
     ],
     phoneNumber: String,
-    bio: String,
-
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetTokenExpires: Date,
@@ -76,9 +73,6 @@ const userSchema = new mongoose.Schema(
       default: true,
       select: false,
     },
-    interests: {
-      type: [String],
-    },
   },
   { timestamps: true }
 );
@@ -86,7 +80,7 @@ const userSchema = new mongoose.Schema(
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
-  this.password = await bcrypt.hash(this.password, 12);
+  // this.password = await bcrypt.hash(this.password, 12);
   // Delete passwordConfirm field
   this.passwordConfirm = undefined;
   next();
