@@ -7,6 +7,11 @@ exports.getAll = (Model) =>
     let filterObject = {};
     if (req.params.categoryID)
       filterObject = { category: req.params.categoryID };
+    if (req.params.subcategoryID)
+      filterObject["subcategory"] = req.params.subcategoryID;
+    if (req.params.brandID) filterObject["brand"] = req.params.brandID;
+    if (req.filterObject)
+      filterObject = { ...filterObject, ...req.filterObject };
 
     // EXECUTE QUERY
     const features = new APIFeatures(Model.find(filterObject), req.query)

@@ -1,5 +1,6 @@
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
+const handlerFactory = require("./handlerFactory");
 
 const Order = require("../models/orderModel");
 const Cart = require("../models/cartModel");
@@ -114,3 +115,44 @@ exports.createOrderCheckout = catchAsync(async (req, res, next) => {
   );
   res.redirect(newUrl);
 });
+
+exports.getOrder = catchAsync(async (req, res, next) => {
+  let filter = {};
+  if (req.user.role === "user") filter = { user: req.user._id };
+  const order = await Order.findOne({ _id: req.params.id, ...filter });
+  if (req.user.role === "user" && !order)
+    return next(new AppError("You don't have an order with this id", 404));
+  if (req.user.role === "admin" && !order)
+    return next(new AppError("There is no order with this id", 404));
+
+  res.status(200).json({
+    status: "success",
+    order,
+  });
+});
+
+exports.filterOrders = (req, res, next) => {
+  if (req.user.role === "user") {
+    req.filterObject = { user: req.user._id };
+  }
+  next();
+};
+
+exports.filterBody = (req, res, next) => {
+  const filteredBody = {};
+  if (req.body.hasOwnProperty("status")) {
+    filteredBody.status = req.body.status;
+  }
+  if (req.body.hasOwnProperty("paymentStatus")) {
+    filteredBody.paymentStatus = req.body.paymentStatus;
+  }
+  if (req.body.hasOwnProperty("paymentMethodType")) {
+    filteredBody.paymentMethodType = req.body.paymentMethodType;
+  }
+  req.body = filteredBody;
+  next();
+};
+
+exports.getAllOrders = handlerFactory.getAll(Order);
+exports.deleteOrder = handlerFactory.deleteOne(Order);
+exports.updateOrder = handlerFactory.updateOne(Order);

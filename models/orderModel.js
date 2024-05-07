@@ -60,7 +60,7 @@ orderSchema.pre(/^find/, function (next) {
     path: "user",
     select: "name profileImg email phone",
   }).populate({
-    path: "cartItems.product",
+    path: "products.product",
     select: "title imageCover ",
   });
 
