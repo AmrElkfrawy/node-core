@@ -5,6 +5,7 @@ const handlerFactory = require("./handlerFactory");
 const Order = require("../models/orderModel");
 const Cart = require("../models/cartModel");
 const Product = require("../models/productModel");
+const User = require("../models/userModel");
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
@@ -85,11 +86,12 @@ exports.createOrderCheckout = catchAsync(async (req, res, next) => {
       new AppError(`There is no cart for this user with this id`, 404)
     );
   }
+  const adres = await User.findOne({ _id: userId, "addresses._id": address });
   await Order.create({
     user: userId,
     products: cart.cartItems,
     totalPrice: price,
-    shippingAddress: address,
+    shippingAddress: adres.addresses[0],
     paymentStatus: "Paid",
     paymentMethodType: "card",
   });

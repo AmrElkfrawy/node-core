@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const slugify = require("slugify");
 
 const productSchema = new mongoose.Schema(
   {
@@ -50,7 +51,7 @@ const productSchema = new mongoose.Schema(
 productSchema.index({ name: 1, category: 1, brand: 1 }, { unique: true });
 
 productSchema.pre("save", function (next) {
-  this.slug = slugify(this.name, { lower: true });
+  if (this.name) this.slug = slugify(this.name, { lower: true });
   this.priceAfterDiscount = this.price - (this.price * this.discount) / 100;
   next();
 });
@@ -60,15 +61,15 @@ productSchema.pre(/^find/, function (next) {
   if (excludeCategoryAndBrand) {
     this.populate({
       path: "category",
-      select: "name -_id",
+      select: "name",
     })
       .populate({
         path: "brand",
-        select: "name -_id",
+        select: "name",
       })
       .populate({
         path: "subCategory",
-        select: "name -_id",
+        select: "name",
       });
   }
   next();

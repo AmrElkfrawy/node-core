@@ -7,27 +7,12 @@ class APIFeatures {
 
   filter() {
     const queryObj = { ...this.queryString };
-    const excludedFields = [
-      "page",
-      "sort",
-      "limit",
-      "fields",
-      "search",
-      "location",
-      "category",
-    ];
+    const excludedFields = ["page", "sort", "limit", "fields", "search"];
     excludedFields.forEach((el) => delete queryObj[el]);
 
     // Advanced Filtering
     let queryStr = JSON.stringify(queryObj);
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`); // \b for finding the exact word, not when it's part of another.. g for multiple occurrences
-
-    if (this.queryString.location) {
-      const locations = this.queryString.location.split(",");
-      this.query = this.query.find({
-        "location.governorate": { $in: locations },
-      });
-    }
 
     if (this.queryString.search) {
       const searchRegex = new RegExp("^" + this.queryString.search, "i");
@@ -43,9 +28,8 @@ class APIFeatures {
       const sortBy = this.queryString.sort.split(",").join(" ");
       this.query = this.query.sort(sortBy);
     } else {
-      this.query = this.query.sort("-createdAt"); // - for sorting in descending order
+      this.query = this.query.sort("-createdAt");
     }
-
     return this;
   }
 

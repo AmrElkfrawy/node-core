@@ -12,7 +12,10 @@ router
     subcategoryController.setCategoryIdToBody,
     subcategoryController.createSubcategory
   )
-  .get(subcategoryController.getAllSubcategories);
+  .get(
+    subcategoryController.setCategoryIdToBody,
+    subcategoryController.getAllSubcategories
+  );
 router
   .route("/:id")
   .get(subcategoryController.getSubcategory)

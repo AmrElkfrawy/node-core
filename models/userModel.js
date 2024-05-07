@@ -2,6 +2,7 @@ const crypto = require("crypto");
 const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
+const { type } = require("os");
 
 const userSchema = new mongoose.Schema(
   {
@@ -44,8 +45,14 @@ const userSchema = new mongoose.Schema(
     addresses: [
       {
         id: { type: mongoose.Schema.Types.ObjectId },
-        governorate: String,
-        city: String,
+        governorate: {
+          type: String,
+          required: [true, "Please provide governorate"],
+        },
+        city: {
+          type: String,
+          required: [true, "Please provide city"],
+        },
         details: String,
         postalCode: String,
       },
@@ -73,6 +80,12 @@ const userSchema = new mongoose.Schema(
       default: true,
       select: false,
     },
+    wishlist: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
+      },
+    ],
   },
   { timestamps: true }
 );
@@ -80,7 +93,7 @@ const userSchema = new mongoose.Schema(
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
-  // this.password = await bcrypt.hash(this.password, 12);
+  this.password = await bcrypt.hash(this.password, 12);
   // Delete passwordConfirm field
   this.passwordConfirm = undefined;
   next();
@@ -138,7 +151,10 @@ userSchema.methods.createPasswordResetCode = function () {
 userSchema.methods.createEmailVerificationToken = function () {
   const verificationToken = crypto.randomBytes(32).toString("hex");
 
-  this.emailVerificationToken = verificationToken;
+  this.emailVerificationToken = crypto
+    .createHash("sha256")
+    .update(verificationToken)
+    .digest("hex");
 
   this.verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000; // Expires in 24 hours
 

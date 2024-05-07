@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const slugify = require("slugify");
 
 const subCategorySchema = new mongoose.Schema(
   {
@@ -6,8 +7,9 @@ const subCategorySchema = new mongoose.Schema(
       type: String,
       trim: true,
       unique: [true, "SubCategory must be unique"],
-      minlength: [2, "To short SubCategory name"],
-      maxlength: [32, "To long SubCategory name"],
+      minlength: [2, "Too short SubCategory name"],
+      maxlength: [32, "Too long SubCategory name"],
+      required: [true, "SubCategory name must be provided"],
     },
     slug: String,
 
@@ -21,7 +23,7 @@ const subCategorySchema = new mongoose.Schema(
 );
 
 subCategorySchema.pre("save", function (next) {
-  this.slug = slugify(this.name, { lower: true });
+  if (this.name) this.slug = slugify(this.name, { lower: true });
   next();
 });
 

@@ -5,11 +5,8 @@ const APIFeatures = require("./../utils/apiFeatures");
 exports.getAll = (Model) =>
   catchAsync(async (req, res, next) => {
     let filterObject = {};
-    if (req.params.categoryID)
-      filterObject = { category: req.params.categoryID };
-    if (req.params.subcategoryID)
-      filterObject["subcategory"] = req.params.subcategoryID;
-    if (req.params.brandID) filterObject["brand"] = req.params.brandID;
+    if (req.params.categoryId)
+      filterObject = { category: req.params.categoryId };
     if (req.filterObject)
       filterObject = { ...filterObject, ...req.filterObject };
 
@@ -56,7 +53,7 @@ exports.createOne = (Model) =>
     res.status(201).json({
       status: "success",
       data: {
-        tour: newDoc,
+        doc: newDoc,
       },
     });
   });

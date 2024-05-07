@@ -15,7 +15,7 @@ const brandSchema = new mongoose.Schema(
 );
 
 brandSchema.pre("save", function (next) {
-  this.slug = slugify(this.name, { lower: true });
+  if (this.name) this.slug = slugify(this.name, { lower: true });
   next();
 });
 

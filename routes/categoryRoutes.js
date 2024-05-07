@@ -30,6 +30,6 @@ router
     categoryController.deleteCategory
   );
 
-router.use("/:categoryId/products", productRouter);
+router.use("/:categoryId/subcategories", subcategoryRouter);
 
 module.exports = router;

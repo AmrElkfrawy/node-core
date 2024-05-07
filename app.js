@@ -18,6 +18,9 @@ const categoryRouter = require("./routes/categoryRoutes");
 const brandRouter = require("./routes/brandRoutes");
 const cartRouter = require("./routes/cartRoutes");
 const orderRouter = require("./routes/orderRoutes");
+const wishlistRouter = require("./routes/wishlistRoutes");
+const addressRouter = require("./routes/addressRoutes");
+const subcategoryRouter = require("./routes/subcategoryRoutes");
 
 const app = express();
 
@@ -48,7 +51,7 @@ app.use(xss());
 // Prevent parameter pollution
 app.use(
   hpp({
-    whitelist: ["name", "category", "ratingsQuantity", "rating"],
+    whitelist: ["name", "category", "subcategory", "brand", "price"],
   })
 );
 
@@ -71,6 +74,9 @@ app.use("/api/v1/categories", categoryRouter);
 app.use("/api/v1/brands", brandRouter);
 app.use("/api/v1/carts", cartRouter);
 app.use("/api/v1/orders", orderRouter);
+app.use("/api/v1/wishlists", wishlistRouter);
+app.use("/api/v1/addresses", addressRouter);
+app.use("/api/v1/subcategories", subcategoryRouter);
 
 app.all("*", (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));

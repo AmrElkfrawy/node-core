@@ -26,7 +26,7 @@ const handleDuplicateFieldsDB = (err) => {
       message += `This ${duplicatedFields} already exists.`;
     }
     if (duplicatedFields.length > 1) {
-      message += "You cannot post two reviews for the same landmark.";
+      message += "You cannot post two reviews for the same review.";
     }
 
     // const message = `Duplicate field value: ${value}. Please use another value.`;
