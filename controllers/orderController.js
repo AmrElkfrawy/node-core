@@ -8,6 +8,7 @@ const Product = require("../models/productModel");
 const User = require("../models/userModel");
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const ObjectId = require("mongoose").Types.ObjectId;
 
 exports.getCheckoutSession = catchAsync(async (req, res, next) => {
   const cart = await Cart.findOne({
@@ -23,7 +24,7 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
   let shippingAddress = req.body.shippingAddress;
 
   if (!shippingAddress) {
-    if (!req.user.addresses) {
+    if (req.user.addresses.length === 0) {
       return next(
         new AppError(
           `Please provide shipping address when creating an order, or in your profile`,
@@ -32,7 +33,7 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
       );
     }
 
-    shippingAddress = req.user.addresses[0];
+    shippingAddress = req.user.addresses[0]._id;
   }
 
   const items = cart.cartItems.map((item) => {
@@ -57,7 +58,7 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
       "host"
     )}/api/v1/orders/create/?cartId=${req.params.cartId}&userId=${
       req.user._id
-    }&price=${cart.totalPriceAfterDiscount}&address=${shippingAddress._id}`,
+    }&price=${cart.totalPriceAfterDiscount}&address=${shippingAddress}`,
     cancel_url: `${req.protocol}://${req.get("host")}/api/v1/products`,
     customer_email: req.user.email,
     client_reference_id: req.params.cartId,
@@ -86,7 +87,12 @@ exports.createOrderCheckout = catchAsync(async (req, res, next) => {
       new AppError(`There is no cart for this user with this id`, 404)
     );
   }
-  const adres = await User.findOne({ _id: userId, "addresses._id": address });
+  let adres;
+  if (ObjectId.isValid(address)) {
+    adres = await User.findOne({ _id: userId, "addresses._id": address });
+  } else {
+    adres = { addresses: [{ governorate: address }] };
+  }
   await Order.create({
     user: userId,
     products: cart.cartItems,

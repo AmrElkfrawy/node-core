@@ -1,6 +1,5 @@
 const express = require("express");
 const orderController = require("../controllers/orderController");
-const productController = require("../controllers/productController");
 const authController = require("../controllers/authController");
 
 const router = express.Router();
@@ -11,11 +10,7 @@ router.post(
   orderController.getCheckoutSession
 );
 
-router.get(
-  "/create",
-  orderController.createOrderCheckout,
-  productController.getAllProducts
-);
+router.get("/create", orderController.createOrderCheckout);
 
 router.use(authController.protect);
 router.route("/:id").get(orderController.getOrder);
