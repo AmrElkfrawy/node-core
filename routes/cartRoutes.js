@@ -16,4 +16,5 @@ router
   .patch(cartController.updateCartItemQuantity)
   .delete(cartController.removeSpecificCartItem);
 
+router.post("/coupon", cartController.applyCouponDiscount);
 module.exports = router;

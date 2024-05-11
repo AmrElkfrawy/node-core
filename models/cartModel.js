@@ -23,6 +23,14 @@ const cartSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: "User",
     },
+    couponed: {
+      type: Boolean,
+      default: false,
+    },
+    coupon: {
+      type: mongoose.Schema.ObjectId,
+      ref: "Coupon",
+    },
   },
   { timestamps: true }
 );
@@ -32,6 +40,9 @@ cartSchema.pre(/^find/, function (next) {
     path: "cartItems.product",
     select: "name price discount priceAfterDiscount images quantity",
     options: { excludeCategoryAndBrand: true },
+  }).populate({
+    path: "coupon",
+    select: "discount",
   });
   next();
 });
