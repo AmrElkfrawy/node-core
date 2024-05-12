@@ -4,18 +4,17 @@ const authController = require("../controllers/authController");
 
 const router = express.Router();
 
+router.route("/").get(couponController.getAllCoupon);
+
 router.use(authController.protect);
 router.use(authController.restrictTo("admin"));
 
-router
-  .route("/")
-  .post(couponController.createCoupon)
-  .get(couponController.getAllCoupon);
+router.route("/").post(couponController.createCoupon);
 
 router
   .route("/:id")
   .get(couponController.getCoupon)
-  .patch(couponController.updateCoupon)
+  .patch(couponController.filterBody, couponController.updateCoupon)
   .delete(couponController.deleteCoupon);
 
 module.exports = router;
