@@ -1,8 +1,15 @@
 const User = require("../models/userModel");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
+const Product = require("../models/productModel");
 
 exports.addToWishlist = catchAsync(async (req, res, next) => {
+  const product = await Product.findById(req.body.productId);
+  if (!product) {
+    return next(
+      new AppError("No product found with that ID, Can't add to wishlist", 404)
+    );
+  }
   const user = await User.findByIdAndUpdate(
     req.user._id,
     {
