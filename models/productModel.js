@@ -44,11 +44,27 @@ const productSchema = new mongoose.Schema(
       ref: "SubCategory",
     },
     images: [String],
+    ratingsAverage: {
+      type: Number,
+      default: 4,
+      min: [1, "Rating must be above 1.0"],
+      max: [5, "Rating must be below 5.0"],
+    },
+    ratingsQuantity: {
+      type: Number,
+      default: 0,
+    },
   },
-  { timestamps: true }
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
 productSchema.index({ name: 1, category: 1, brand: 1 }, { unique: true });
+
+productSchema.virtual("reviews", {
+  ref: "Review",
+  foreignField: "product",
+  localField: "_id",
+});
 
 productSchema.pre("save", function (next) {
   if (this.name) this.slug = slugify(this.name, { lower: true });

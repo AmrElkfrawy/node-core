@@ -15,7 +15,7 @@ class APIFeatures {
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`); // \b for finding the exact word, not when it's part of another.. g for multiple occurrences
 
     if (this.queryString.search) {
-      const searchRegex = new RegExp("^" + this.queryString.search, "i");
+      const searchRegex = new RegExp("\\b" + this.queryString.search, "i");
       this.query = this.query.find({ name: searchRegex });
     }
 

@@ -12,14 +12,17 @@ const subCategorySchema = new mongoose.Schema(
       required: [true, "SubCategory name must be provided"],
     },
     slug: String,
-
     category: {
-      type: mongoose.Schema.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
-      required: [true, "SubCategory must be belong to parent category"],
+      required: true,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 );
 
 subCategorySchema.pre("save", function (next) {

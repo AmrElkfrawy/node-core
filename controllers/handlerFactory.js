@@ -2,9 +2,10 @@ const catchAsync = require("./../utils/catchAsync");
 const AppError = require("./../utils/appError");
 const APIFeatures = require("./../utils/apiFeatures");
 
-exports.getAll = (Model) =>
+exports.getAll = (Model, populateOptions) =>
   catchAsync(async (req, res, next) => {
     let filterObject = {};
+    if (req.params.productId) filterObject = { product: req.params.productId };
     if (req.params.categoryId)
       filterObject = { category: req.params.categoryId };
     if (req.filterObject)
@@ -16,6 +17,10 @@ exports.getAll = (Model) =>
       .sort()
       .limitFields()
       .paginate();
+
+    if (populateOptions) {
+      features.query = features.query.populate(populateOptions);
+    }
     const docs = await features.query;
 
     // SEND RESPONSE

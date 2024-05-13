@@ -1,7 +1,7 @@
 const express = require("express");
 const productController = require("./../controllers/productController");
 const authController = require("../controllers/authController");
-
+const reviewRouter = require("./reviewRoutes");
 const router = express.Router({ mergeParams: true });
 
 router
@@ -32,4 +32,5 @@ router
     productController.deleteProduct
   );
 
+router.use("/:productId/reviews", reviewRouter);
 module.exports = router;

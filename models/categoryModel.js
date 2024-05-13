@@ -10,8 +10,14 @@ const categorySchema = new mongoose.Schema(
     image: String,
     slug: String,
   },
-  { timestamps: true }
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
+
+categorySchema.virtual("subcategories", {
+  ref: "SubCategory",
+  foreignField: "category",
+  localField: "_id",
+});
 
 categorySchema.pre("save", function (next) {
   if (this.name) this.slug = slugify(this.name, { lower: true });

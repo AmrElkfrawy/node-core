@@ -61,7 +61,7 @@ exports.setCategoryIdToBody = (req, res, next) => {
 };
 
 exports.getAllProducts = factory.getAll(Product);
-exports.getProduct = factory.getOne(Product);
+exports.getProduct = factory.getOne(Product, { path: "reviews" });
 exports.createProduct = factory.createOne(Product);
 exports.deleteProduct = factory.deleteOne(Product);
 
