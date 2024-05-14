@@ -2,6 +2,18 @@ const mongoose = require("mongoose");
 
 const orderSchema = new mongoose.Schema(
   {
+    firstName: {
+      type: String,
+      required: [true, "First name is required"],
+    },
+    lastName: {
+      type: String,
+      required: [true, "Last name is required"],
+    },
+    phone: {
+      type: String,
+      required: [true, "Phone is required"],
+    },
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -33,15 +45,15 @@ const orderSchema = new mongoose.Schema(
       default: "Pending",
     },
     shippingAddress: {
-      details: String,
-      city: String,
+      country: String,
+      address: String,
       governorate: String,
-      postalCode: String,
-      phone: String,
+      city: String,
+      postCode: String,
     },
     shippingPrice: {
       type: Number,
-      default: 0,
+      default: 10,
     },
     paymentMethodType: {
       type: String,

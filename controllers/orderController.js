@@ -21,9 +21,25 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
       new AppError(`There is no cart for this user with this id`, 404)
     );
   }
-  let shippingAddress = req.body.shippingAddress;
 
-  if (!shippingAddress) {
+  if (!req.body.firstName)
+    return next(new AppError("First name is required", 400));
+  if (!req.body.lastName)
+    return next(new AppError("Last name is required", 400));
+  if (!req.body.phone) return next(new AppError("Phone is required", 400));
+  let shippingAddress = {};
+  if (req.body.shippingAddress) {
+    if (!shippingAddress.country)
+      return next(new AppError("Country is required", 400));
+    if (!shippingAddress.address)
+      return next(new AppError("Address is required", 400));
+    if (!shippingAddress.governorate)
+      return next(new AppError("Governorate is required", 400));
+    if (!shippingAddress.city)
+      return next(new AppError("City is required", 400));
+    if (!shippingAddress.postCode)
+      return next(new AppError("Post code is required", 400));
+  } else {
     if (req.user.addresses.length === 0) {
       return next(
         new AppError(
@@ -32,8 +48,7 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
         )
       );
     }
-
-    shippingAddress = req.user.addresses[0]._id;
+    shippingAddress.address = req.user.addresses[0]._id;
   }
 
   const items = cart.cartItems.map((item) => {
@@ -42,7 +57,8 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
     }
     return {
       price_data: {
-        unit_amount: item.product.price * (1 - item.product.discount) * 100,
+        unit_amount:
+          item.product.price * (1 - item.product.discount / 100) * 100,
         currency: "usd",
         product_data: {
           name: item.product.name,
@@ -58,11 +74,32 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
       "host"
     )}/api/v1/orders/create/?cartId=${req.params.cartId}&userId=${
       req.user._id
-    }&price=${cart.totalPriceAfterDiscount}&address=${shippingAddress}`,
+    }&price=${cart.totalPriceAfterDiscount}&country=${
+      shippingAddress.country
+    }&address=${shippingAddress.address}&governorate=${
+      shippingAddress.governorate
+    }&city=${shippingAddress.city}&postCode=${
+      shippingAddress.postCode
+    }&firstName=${req.body.firstName}&lastName=${req.body.lastName}&phone=${
+      req.body.phone
+    }`,
     cancel_url: `${req.protocol}://${req.get("host")}/api/v1/products`,
     customer_email: req.user.email,
     client_reference_id: req.params.cartId,
     line_items: items,
+
+    shipping_options: [
+      {
+        shipping_rate_data: {
+          type: "fixed_amount",
+          fixed_amount: {
+            amount: 1000,
+            currency: "usd",
+          },
+          display_name: "Shipping takes 5-7 days",
+        },
+      },
+    ],
     mode: "payment",
   });
 
@@ -73,7 +110,19 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
 });
 
 exports.createOrderCheckout = catchAsync(async (req, res, next) => {
-  const { cartId, userId, price, address } = req.query;
+  const {
+    cartId,
+    userId,
+    price,
+    country,
+    address,
+    governorate,
+    city,
+    postCode,
+    firstName,
+    lastName,
+    phone,
+  } = req.query;
   if (!cartId || !userId || !price || !address) {
     return next();
   }
@@ -88,18 +137,24 @@ exports.createOrderCheckout = catchAsync(async (req, res, next) => {
     );
   }
   let adres;
+
   if (ObjectId.isValid(address)) {
     adres = await User.findOne({ _id: userId, "addresses._id": address });
   } else {
-    adres = { addresses: [{ governorate: address }] };
+    adres = { addresses: [{ country, address, governorate, city, postCode }] };
   }
+  console.log(firstName, lastName, phone, adres.addresses[0]);
   await Order.create({
     user: userId,
+    firstName,
+    lastName,
+    phone,
     products: cart.cartItems,
     totalPrice: price,
     shippingAddress: adres.addresses[0],
     paymentStatus: "Paid",
     paymentMethodType: "card",
+    shippingPrice: 10,
   });
 
   const updatePromises = await Promise.all(
@@ -164,3 +219,5 @@ exports.filterBody = (req, res, next) => {
 exports.getAllOrders = handlerFactory.getAll(Order);
 exports.deleteOrder = handlerFactory.deleteOne(Order);
 exports.updateOrder = handlerFactory.updateOne(Order);
+
+// http://127.0.0.1:5000/api/v1/orders/create/?cartId=6642c20b51b856da7f4bc49e&userId=5c8a201e2f8fb814b56fa186&price=526.24&country=Egy&address=sd

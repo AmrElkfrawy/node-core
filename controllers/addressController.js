@@ -13,9 +13,18 @@ exports.getAddresses = catchAsync(async (req, res, next) => {
 });
 
 exports.addAddress = catchAsync(async (req, res, next) => {
-  if (!req.body.governorate || !req.body.city)
+  if (
+    !req.body.country ||
+    !req.body.city ||
+    !req.body.governorate ||
+    !req.body.address ||
+    !req.body.postCode
+  )
     return next(
-      new AppError("You can't add address without governorate and city", 400)
+      new AppError(
+        "Country, city, governorate, address and post code are required",
+        400
+      )
     );
   const user = await User.findByIdAndUpdate(
     req.user._id,

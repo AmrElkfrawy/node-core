@@ -2,7 +2,6 @@ const crypto = require("crypto");
 const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
-const { type } = require("os");
 
 const userSchema = new mongoose.Schema(
   {
@@ -45,16 +44,11 @@ const userSchema = new mongoose.Schema(
     addresses: [
       {
         id: { type: mongoose.Schema.Types.ObjectId },
-        governorate: {
-          type: String,
-          required: [true, "Please provide governorate"],
-        },
-        city: {
-          type: String,
-          required: [true, "Please provide city"],
-        },
-        details: String,
-        postalCode: String,
+        country: String,
+        address: String,
+        governorate: String,
+        city: String,
+        postCode: String,
       },
     ],
     phoneNumber: String,
