@@ -29,6 +29,7 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
   if (!req.body.phone) return next(new AppError("Phone is required", 400));
   let shippingAddress = {};
   if (req.body.shippingAddress) {
+    shippingAddress = req.body.shippingAddress;
     if (!shippingAddress.country)
       return next(new AppError("Country is required", 400));
     if (!shippingAddress.address)
@@ -143,7 +144,6 @@ exports.createOrderCheckout = catchAsync(async (req, res, next) => {
   } else {
     adres = { addresses: [{ country, address, governorate, city, postCode }] };
   }
-  console.log(firstName, lastName, phone, adres.addresses[0]);
   await Order.create({
     user: userId,
     firstName,
@@ -172,10 +172,7 @@ exports.createOrderCheckout = catchAsync(async (req, res, next) => {
   // console.log(updatePromises);
   await Cart.findByIdAndDelete(cartId);
 
-  const newUrl = `${req.originalUrl.split("create")[0]}`.replace(
-    "orders",
-    "products"
-  );
+  const newUrl = "http://localhost:3000/orders";
   res.redirect(newUrl);
 });
 
