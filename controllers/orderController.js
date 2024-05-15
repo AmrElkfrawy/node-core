@@ -96,7 +96,10 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       phone: req.body.phone,
-      shippingAddress,
+      country: shippingAddress.country,
+      address: shippingAddress.address,
+      governorate: shippingAddress.governorate,
+      city: shippingAddress.city,
     },
   });
 
@@ -130,7 +133,8 @@ const createOrderCheckout = async (session) => {
     const cart = await Cart.findById(session.client_reference_id);
     const user = (await User.findOne({ email: session.customer_email }))._id;
     const price = (session.amount_total + session.shipping_amount) / 100;
-    const { firstName, lastName, phone, shippingAddress } = session.metadata;
+    const { firstName, lastName, phone, country, address, governorate, city } =
+      session.metadata;
 
     await Order.create({
       user,
@@ -139,7 +143,12 @@ const createOrderCheckout = async (session) => {
       phone,
       products: cart.cartItems,
       totalPrice: price,
-      shippingAddress,
+      shippingAddress: {
+        country,
+        address,
+        governorate,
+        city,
+      },
       paymentStatus: "Paid",
       paymentMethodType: "card",
       shippingPrice: 10,
