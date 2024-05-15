@@ -4,6 +4,8 @@ const authController = require("../controllers/authController");
 
 const router = express.Router();
 
+router.get("/redirect", orderController.redirectWebhook);
+
 router.post(
   "/checkout-session/:cartId",
   authController.protect,
@@ -21,4 +23,5 @@ router
   .route("/:id")
   .delete(orderController.deleteOrder)
   .patch(orderController.filterBody, orderController.updateOrder);
+
 module.exports = router;

@@ -71,8 +71,12 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
 
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
-    success_url: `http://localhost:3000/orders`,
-    cancel_url: `${req.protocol}://${req.get("host")}/api/v1/products`,
+    success_url: `${req.protocol}://${req.get(
+      "host"
+    )}/api/v1/orders/redirect?status=success`,
+    cancel_url: `${req.protocol}://${req.get(
+      "host"
+    )}/api/v1/orders/redirect?status=cancel`,
     customer_email: req.user.email,
     client_reference_id: req.params.cartId,
     line_items: items,
@@ -111,7 +115,6 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
 
 exports.webhook = (req, res, next) => {
   const signature = req.headers["stripe-signature"];
-
   let event;
   try {
     event = stripe.webhooks.constructEvent(
@@ -132,10 +135,9 @@ const createOrderCheckout = async (session) => {
   try {
     const cart = await Cart.findById(session.client_reference_id);
     const user = (await User.findOne({ email: session.customer_email }))._id;
-    const price = (session.amount_total + session.shipping_amount) / 100;
+    const price = session.amount_total / 100 + 10;
     const { firstName, lastName, phone, country, address, governorate, city } =
       session.metadata;
-
     await Order.create({
       user,
       firstName,
@@ -153,7 +155,6 @@ const createOrderCheckout = async (session) => {
       paymentMethodType: "card",
       shippingPrice: 10,
     });
-
     const updatePromises = await Promise.all(
       cart.cartItems.map(async (item) => {
         return await Product.findByIdAndUpdate(
@@ -207,6 +208,14 @@ exports.filterBody = (req, res, next) => {
   }
   req.body = filteredBody;
   next();
+};
+
+exports.redirectWebhook = (req, res, next) => {
+  if (req.query.status === "success") {
+    res.redirect("http://localhost:3000/orders");
+  } else {
+    res.redirect("http://localhost:3000/cart");
+  }
 };
 
 exports.getAllOrders = handlerFactory.getAll(Order);

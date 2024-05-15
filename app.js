@@ -70,7 +70,7 @@ const limiter = rateLimit({
   message: "Too many requests from this IP, please try again in after an hour.",
 });
 // protect from dos
-app.use("/api", limiter);
+// app.use("/api", limiter);
 
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
