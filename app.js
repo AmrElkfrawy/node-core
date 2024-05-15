@@ -23,6 +23,7 @@ const addressRouter = require("./routes/addressRoutes");
 const subcategoryRouter = require("./routes/subcategoryRoutes");
 const couponRouter = require("./routes/couponRoutes");
 const reviewRouter = require("./routes/reviewRoutes");
+const orderController = require("./controllers/orderController");
 
 const app = express();
 
@@ -39,6 +40,12 @@ app.use(helmet({ contentSecurityPolicy: false }));
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
+
+app.post(
+  "/webhook",
+  express.raw({ type: "application/json" }),
+  orderController.webhook
+);
 
 // Body parser, reading data from body in req.body
 app.use(express.json({ limit: "500kb" }));

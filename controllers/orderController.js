@@ -71,19 +71,7 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
 
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
-    success_url: `${req.protocol}://${req.get(
-      "host"
-    )}/api/v1/orders/create/?cartId=${req.params.cartId}&userId=${
-      req.user._id
-    }&price=${cart.totalPriceAfterDiscount}&country=${
-      shippingAddress.country
-    }&address=${shippingAddress.address}&governorate=${
-      shippingAddress.governorate
-    }&city=${shippingAddress.city}&postCode=${
-      shippingAddress.postCode
-    }&firstName=${req.body.firstName}&lastName=${req.body.lastName}&phone=${
-      req.body.phone
-    }`,
+    success_url: `http://localhost:3000/orders`,
     cancel_url: `${req.protocol}://${req.get("host")}/api/v1/products`,
     customer_email: req.user.email,
     client_reference_id: req.params.cartId,
@@ -102,6 +90,14 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
       },
     ],
     mode: "payment",
+    customer_email: req.user.email,
+    client_reference_id: req.params.cartId,
+    metadata: {
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      phone: req.body.phone,
+      shippingAddress,
+    },
   });
 
   res.status(200).json({
@@ -110,71 +106,62 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.createOrderCheckout = catchAsync(async (req, res, next) => {
-  const {
-    cartId,
-    userId,
-    price,
-    country,
-    address,
-    governorate,
-    city,
-    postCode,
-    firstName,
-    lastName,
-    phone,
-  } = req.query;
-  if (!cartId || !userId || !price || !address) {
-    return next();
-  }
-  const cart = await Cart.findOne({
-    user: userId,
-    _id: cartId,
-  });
+exports.webhook = (req, res, next) => {
+  const signature = req.headers["stripe-signature"];
 
-  if (!cart) {
-    return next(
-      new AppError(`There is no cart for this user with this id`, 404)
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET
     );
+  } catch (err) {
+    return res.status(400).send(`Webhook error: ${err.message}`);
   }
-  let adres;
 
-  if (ObjectId.isValid(address)) {
-    adres = await User.findOne({ _id: userId, "addresses._id": address });
-  } else {
-    adres = { addresses: [{ country, address, governorate, city, postCode }] };
+  if (event.type === "checkout.session.completed")
+    createOrderCheckout(event.data.object);
+  res.status(200).json({ received: true });
+};
+
+const createOrderCheckout = async (session) => {
+  try {
+    const cart = await Cart.findById(session.client_reference_id);
+    const user = (await User.findOne({ email: session.customer_email }))._id;
+    const price = (session.amount_total + session.shipping_amount) / 100;
+    const { firstName, lastName, phone, shippingAddress } = session.metadata;
+
+    await Order.create({
+      user,
+      firstName,
+      lastName,
+      phone,
+      products: cart.cartItems,
+      totalPrice: price,
+      shippingAddress,
+      paymentStatus: "Paid",
+      paymentMethodType: "card",
+      shippingPrice: 10,
+    });
+
+    const updatePromises = await Promise.all(
+      cart.cartItems.map(async (item) => {
+        return await Product.findByIdAndUpdate(
+          item.product._id,
+          {
+            $inc: { quantity: -item.quantity, sold: +item.quantity },
+          },
+          { new: true }
+        );
+      })
+    );
+    // console.log(updatePromises);
+    await Cart.findByIdAndDelete(session.client_reference_id);
+  } catch (err) {
+    console.log(err);
   }
-  await Order.create({
-    user: userId,
-    firstName,
-    lastName,
-    phone,
-    products: cart.cartItems,
-    totalPrice: price,
-    shippingAddress: adres.addresses[0],
-    paymentStatus: "Paid",
-    paymentMethodType: "card",
-    shippingPrice: 10,
-  });
-
-  const updatePromises = await Promise.all(
-    cart.cartItems.map(async (item) => {
-      return await Product.findByIdAndUpdate(
-        item.product._id,
-        {
-          $inc: { quantity: -item.quantity, sold: +item.quantity },
-        },
-        { new: true }
-      );
-    })
-  );
-
-  // console.log(updatePromises);
-  await Cart.findByIdAndDelete(cartId);
-
-  const newUrl = "http://localhost:3000/orders";
-  res.redirect(newUrl);
-});
+};
 
 exports.getOrder = catchAsync(async (req, res, next) => {
   let filter = {};
