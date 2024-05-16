@@ -212,14 +212,12 @@ exports.filterBody = (req, res, next) => {
 
 exports.redirectWebhook = (req, res, next) => {
   if (req.query.status === "success") {
-    res.redirect("http://localhost:3000/orders");
+    res.redirect("https://harri-delta.vercel.app/orders");
   } else {
-    res.redirect("http://localhost:3000/cart");
+    res.redirect("https://harri-delta.vercel.app/orders");
   }
 };
 
 exports.getAllOrders = handlerFactory.getAll(Order);
 exports.deleteOrder = handlerFactory.deleteOne(Order);
 exports.updateOrder = handlerFactory.updateOne(Order);
-
-// http://127.0.0.1:5000/api/v1/orders/create/?cartId=6642c20b51b856da7f4bc49e&userId=5c8a201e2f8fb814b56fa186&price=526.24&country=Egy&address=sd
