@@ -58,8 +58,9 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
     }
     return {
       price_data: {
-        unit_amount:
-          item.product.price * (1 - item.product.discount / 100) * 100,
+        unit_amount: Math.round(
+          item.product.price * (1 - item.product.discount / 100) * 100
+        ),
         currency: "usd",
         product_data: {
           name: item.product.name,
