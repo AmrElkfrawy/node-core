@@ -215,7 +215,7 @@ exports.redirectWebhook = (req, res, next) => {
   if (req.query.status === "success") {
     res.redirect("https://harri-delta.vercel.app/orders");
   } else {
-    res.redirect("https://harri-delta.vercel.app/orders");
+    res.render("paymentFailure");
   }
 };
 

@@ -21,12 +21,15 @@ const sendEmail = async (options) => {
       },
     });
   }
+
   const mailOptions = {
     from: `${process.env.EMAIL_NAME} <${process.env.EMAIL_FROM}>`,
     to: options.email,
     subject: options.subject,
-    text: options.message,
+    text: options.message, // Plain text
+    html: options.html, // HTML version
   };
+
   await transporter.sendMail(mailOptions);
 };
 

@@ -43,12 +43,24 @@ exports.signup = catchAsync(async (req, res, next) => {
     const verificationURL = `${req.protocol}://${req.get(
       "host"
     )}/api/v1/users/verifyEmail/${verifyEmailToken}`;
-    const message = `Welcome to our application! Please verify your email address by clicking the following link: ${verificationURL}`;
+    const message = `Welcome to our application! Please verify your email address by clicking the button below.`;
+
+    const htmlContent = `
+      <div style="text-align: center; padding: 20px;">
+        <h2>Welcome to our application!</h2>
+        <p>${message}</p>
+        <a href="${verificationURL}" 
+           style="background-color: #007BFF; color: white; padding: 10px 20px; 
+                  text-decoration: none; border-radius: 5px; display: inline-block;">
+          Verify Email
+        </a>
+      </div>
+    `;
 
     await sendEmail({
       email: newUser.email,
       subject: "Verify your email address",
-      message,
+      html: htmlContent,
     });
 
     // Send response indicating successful user creation and send token
@@ -132,9 +144,7 @@ exports.verifyEmail = catchAsync(async (req, res, next) => {
 
   // If user not found or token has expired
   if (!user) {
-    return next(
-      new AppError("Verification token is invalid or has expired.", 400)
-    );
+    return res.render("verifyFail");
   }
 
   // If the user is already verified, return a message indicating that
@@ -152,10 +162,7 @@ exports.verifyEmail = catchAsync(async (req, res, next) => {
   await user.save({ validateBeforeSave: false });
 
   // Send response indicating successful email verification
-  res.status(200).json({
-    status: "success",
-    message: "Email verification successful. You can now log in.",
-  });
+  return res.render("verifySuccess");
 });
 
 exports.login = catchAsync(async (req, res, next) => {
