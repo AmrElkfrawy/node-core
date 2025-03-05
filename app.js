@@ -51,6 +51,7 @@ app.post(
   orderController.webhook
 );
 
+app.set("trust proxy", 1);
 // Body parser, reading data from body in req.body
 app.use(express.json({ limit: "500kb" }));
 app.use(express.urlencoded({ extended: true, limit: "500kb" }));
